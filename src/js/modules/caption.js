@@ -35,8 +35,8 @@ export class Caption {
 
     set activeEntry(entry) {
         this.activeEntryEl = entry;
-        this.el.textContent = (entry.querySelector('.Entry-caption')) 
-            ? entry.querySelector('.Entry-caption').textContent
+        this.el.innerHTML = (entry.querySelector('.Entry-caption')) 
+            ? entry.querySelector('.Entry-caption').innerHTML
             : '';
     }
 

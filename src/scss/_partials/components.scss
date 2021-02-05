@@ -95,17 +95,20 @@
     bottom: 0;
     width: calc(100% - (var(--sm-padding) * 2));
     padding: var(--sm-padding);
-    display: flex;
-    justify-content: space-between;
     z-index: 2;
     transform: translateZ(0);
     -webkit-text-stroke-color: white;
     mix-blend-mode: difference;
+    pointer-events: all;
 }
 
 .Caption.is-hidden {
     visibility: hidden;
     pointer-events: none;
+}
+
+.Caption a {
+    -webkit-text-stroke-color: white;
 }
 
 /* ---------------------------------------------------------

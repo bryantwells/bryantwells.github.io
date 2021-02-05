@@ -39,6 +39,7 @@ export class Layout {
             this.lastEntryPos = this.lastEntry.getBoundingClientRect().bottom;
             this.toggleHeader();
             this.toggleCaption();
+            this.toggleFooter();
         }
     }
 
@@ -60,19 +61,23 @@ export class Layout {
     }
 
     toggleCaption() {
-        if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight  * (3/4) && this.caption.el.classList.contains('is-hidden')) {
+        if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight && this.caption.el.classList.contains('is-hidden')) {
             this.caption.el.classList.remove('is-hidden');
             this.scrollDelta = -1;
             this.margin.update(this.scrollDelta);
-        } else if (this.lastEntryPos < window.innerHeight  * (2/3) && !this.caption.el.classList.contains('is-hidden')) {
-            this.caption.el.classList.add('is-hidden');
-            this.footer.classList.remove('is-hidden');
         } else if (this.firstEntryPos > window.innerHeight / 4 && !this.caption.el.classList.contains('is-hidden')) {
             this.caption.el.classList.add('is-hidden');
             this.scrollDelta = 0;
             this.margin.update(this.scrollDelta);
-        } else if (this.lastEntryPos > window.innerHeight  * (2/3) && this.caption.el.classList.contains('is-hidden')) {
-            this.caption.el.classList.remove('is-hidden');
+        } else if (this.lastEntryPos < window.innerHeight && !this.caption.el.classList.contains('is-hidden')) {
+            this.caption.el.classList.add('is-hidden');
+        }
+    }
+
+    toggleFooter() {
+        if (this.lastEntryPos < window.innerHeight && this.footer.classList.contains('is-hidden')) {
+            this.footer.classList.remove('is-hidden');
+        } else if (this.lastEntryPos > window.innerHeight && !this.footer.classList.contains('is-hidden')) {
             this.footer.classList.add('is-hidden');
         }
     }
