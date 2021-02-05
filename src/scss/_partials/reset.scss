@@ -1,0 +1,37 @@
+/* ---------------------------------------------------------
+    Reset
+--------------------------------------------------------- */
+
+* { box-sizing: border-box }
+
+body {
+    margin: 0;
+}
+
+h1, h2, h3 {
+    font-size: unset;
+    font-weight: unset;
+    margin: 0;
+}
+
+ul, ol {
+    font-size: unset;
+    font-weight: unset;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+figure {
+    margin: 0;
+    padding: 0;
+}
+
+p {
+    margin: 0;
+}
+
+a {
+    color: unset;
+    text-decoration: none;
+}

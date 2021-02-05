@@ -1,0 +1,38 @@
+{
+    "name": "static-site",
+    "version": "1.0.0",
+    "scripts": {
+        "dev": "npm-run-all -p watch:*",
+        "build": "npm-run-all -p build:*",
+        "watch:static": "cpx 'src/**/*.!(js|scss)' dist -w",
+        "watch:scss": "chokidar 'src/scss/**/*.scss' -c 'npm run build:scss'",
+        "watch:js": "watchify src/js/main.js -o dist/assets/js/main.js -t [ babelify --presets [@babel/preset-env] ] -v",
+        "watch:media": "onchange -i 'media/**/*' -- npm run sync",
+        "build:static": "cpx 'src/**/*.!(js|scss)' dist",
+        "build:scss": "npm-run-all -s scss:compile scss:prefix",
+        "build:js": "browserify src/js/main.js -o dist/assets/js/main.js -t [ babelify --presets [@babel/preset-env] ]",
+        "scss:compile": "node-sass src/scss/main.scss -o dist/assets/css",
+        "scss:prefix": "postcss dist/assets/css/main.css --use autoprefixer -d dist/assets/css",
+        "sync": "aws s3 sync media s3://bryantwells-bucket/media --delete --profile bryantwells"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.4.4",
+        "@babel/core": "^7.4.5",
+        "@babel/preset-env": "^7.4.5",
+        "autoprefixer": "^9.6.0",
+        "babelify": "^10.0.0",
+        "browserify": "^16.2.3",
+        "chokidar-cli": "^1.2.2",
+        "cpx": "^1.5.0",
+        "node-sass": "^4.12.0",
+        "npm-run-all": "^4.1.5",
+        "onchange": "^7.1.0",
+        "postcss-cli": "^6.1.2",
+        "watchify": "^3.11.1"
+    },
+    "babel": {
+        "presets": [
+            "@babel/preset-env"
+        ]
+    }
+}

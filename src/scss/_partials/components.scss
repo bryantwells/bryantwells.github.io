@@ -1,0 +1,181 @@
+/* ---------------------------------------------------------
+    Components
+--------------------------------------------------------- */
+
+/* ---------------------------------------------------------
+    Main
+--------------------------------------------------------- */
+
+.Main {
+    background-color: rgb(210,210,210);
+}
+
+/* ---------------------------------------------------------
+    Header
+--------------------------------------------------------- */
+
+.Header {
+    position: fixed;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    padding: var(--sm-padding);
+    padding-right: calc(var(--sm-padding) / 2);
+    padding-bottom: calc(var(--sm-padding) / 2);
+    display: flex;
+    flex-direction: column;
+}
+
+.Header-info {
+    margin-bottom: 1rem;
+}
+
+.Header-info.is-hidden {
+    display: none;
+}
+
+.Header-description--short {
+    display: none;
+
+    @media (max-width: $sm-breakpoint) {
+        display: inline;
+    }
+}
+
+.Header-description--long {
+    display: inline;
+
+    @media (max-width: $sm-breakpoint) {
+        display: none;
+    }
+}
+
+/* ---------------------------------------------------------
+    Margin
+--------------------------------------------------------- */
+
+.Margin {
+    flex: 1;
+    min-height: 0;
+}
+
+.Margin.is-hidden {
+    visibility: hidden;
+}
+
+/* ---------------------------------------------------------
+    Ruler
+--------------------------------------------------------- */
+
+.Ruler {
+    position: absolute;
+    visibility: hidden;
+    bottom: 0;
+}
+
+/* ---------------------------------------------------------
+    Ascii
+--------------------------------------------------------- */
+
+.Ascii-image, .Ruler {
+    white-space: pre;
+    font-family: "Hershey Simplex Mono";
+    line-height: 1.3;
+    word-spacing: 0.15em;
+    letter-spacing: 0.4em;
+}
+
+/* ---------------------------------------------------------
+    Footer
+--------------------------------------------------------- */
+
+.Caption {
+    box-sizing: content-box;
+    position: sticky;
+    bottom: 0;
+    width: calc(100% - (var(--sm-padding) * 2));
+    padding: var(--sm-padding);
+    display: flex;
+    justify-content: space-between;
+    z-index: 2;
+    transform: translateZ(0);
+    -webkit-text-stroke-color: white;
+    mix-blend-mode: difference;
+}
+
+.Caption.is-hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+    Content
+--------------------------------------------------------- */
+
+.Content {
+    padding-top: 80vh;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* ---------------------------------------------------------
+    Entry List
+--------------------------------------------------------- */
+
+.EntryList {
+    pointer-events: all;
+    margin-bottom: calc((var(--line-height) * -1rem) - var(--sm-padding) * 2);
+}
+
+/* ---------------------------------------------------------
+    Entry
+--------------------------------------------------------- */
+
+.Entry-figure.is-padded {
+    padding: calc(var(--lg-padding) /2);
+}
+
+.Entry-figure.is-padded .Entry-wrapper {
+    padding: calc(var(--lg-padding) /2);
+}
+
+.Entry-figure.is-contained .Entry-media {
+    width: 100%;
+    max-height: 100vh;
+    object-fit: contain;
+}
+
+.Entry-figure.is-contained.is-padded .Entry-media {
+    width: 100%;
+    max-height: calc(100vh - var(--lg-padding));
+    object-fit: contain;
+}
+
+.Entry-media--image {
+    filter: blur(20px);
+    transform: translateZ(0);
+}
+
+.Entry-media--image.is-loaded {
+    filter: blur(0px);
+}
+
+
+.Entry-caption {
+    display: none;
+}
+
+/* ---------------------------------------------------------
+    Footer
+--------------------------------------------------------- */
+
+.Footer {
+    margin-top: 50vh;
+    padding: var(--sm-padding);
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+}
