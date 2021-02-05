@@ -246,6 +246,7 @@ var Layout = /*#__PURE__*/function () {
     _classCallCheck(this, Layout);
 
     this.headerInfo = document.querySelector('.Header-info');
+    this.footer = document.querySelector('.Footer');
     this.entries = document.querySelectorAll('.Entry');
     this.firstEntry = this.entries[0];
     this.lastEntry = this.entries[this.entries.length - 1];
@@ -315,14 +316,18 @@ var Layout = /*#__PURE__*/function () {
     value: function toggleCaption() {
       if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight * (3 / 4) && this.caption.el.classList.contains('is-hidden')) {
         this.caption.el.classList.remove('is-hidden');
-        this.scrollDelta = -2;
+        this.scrollDelta = -1;
         this.margin.update(this.scrollDelta);
-      } else if (this.lastEntryPos < window.innerHeight * (3 / 4) && !this.caption.el.classList.contains('is-hidden')) {
+      } else if (this.lastEntryPos < window.innerHeight * (2 / 3) && !this.caption.el.classList.contains('is-hidden')) {
         this.caption.el.classList.add('is-hidden');
+        this.footer.classList.remove('is-hidden');
       } else if (this.firstEntryPos > window.innerHeight / 4 && !this.caption.el.classList.contains('is-hidden')) {
         this.caption.el.classList.add('is-hidden');
         this.scrollDelta = 0;
         this.margin.update(this.scrollDelta);
+      } else if (this.lastEntryPos > window.innerHeight * (2 / 3) && this.caption.el.classList.contains('is-hidden')) {
+        this.caption.el.classList.remove('is-hidden');
+        this.footer.classList.add('is-hidden');
       }
     }
   }]);

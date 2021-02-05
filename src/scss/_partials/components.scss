@@ -118,6 +118,7 @@
     position: relative;
     z-index: 1;
     pointer-events: none;
+    margin-bottom: 50vh;
 }
 
 /* ---------------------------------------------------------
@@ -172,10 +173,15 @@
 --------------------------------------------------------- */
 
 .Footer {
-    margin-top: 50vh;
-    padding: var(--sm-padding);
+    // margin-top: 50vh;
+    // padding: var(--sm-padding);
     display: flex;
     justify-content: space-between;
     position: relative;
     z-index: 1;
+    flex: 0;
+}
+
+.Footer.is-hidden {
+    visibility: hidden;
 }
