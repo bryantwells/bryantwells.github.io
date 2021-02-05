@@ -209,7 +209,7 @@ var Caption = /*#__PURE__*/function () {
     key: "activeEntry",
     set: function set(entry) {
       this.activeEntryEl = entry;
-      this.el.textContent = entry.querySelector('.Entry-caption') ? entry.querySelector('.Entry-caption').textContent : '';
+      this.el.innerHTML = entry.querySelector('.Entry-caption') ? entry.querySelector('.Entry-caption').innerHTML : '';
     },
     get: function get() {
       return this.activeEntryEl;
@@ -290,6 +290,7 @@ var Layout = /*#__PURE__*/function () {
         this.lastEntryPos = this.lastEntry.getBoundingClientRect().bottom;
         this.toggleHeader();
         this.toggleCaption();
+        this.toggleFooter();
       }
     }
   }, {
@@ -314,19 +315,24 @@ var Layout = /*#__PURE__*/function () {
   }, {
     key: "toggleCaption",
     value: function toggleCaption() {
-      if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight * (3 / 4) && this.caption.el.classList.contains('is-hidden')) {
+      if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight && this.caption.el.classList.contains('is-hidden')) {
         this.caption.el.classList.remove('is-hidden');
         this.scrollDelta = -1;
         this.margin.update(this.scrollDelta);
-      } else if (this.lastEntryPos < window.innerHeight * (2 / 3) && !this.caption.el.classList.contains('is-hidden')) {
-        this.caption.el.classList.add('is-hidden');
-        this.footer.classList.remove('is-hidden');
       } else if (this.firstEntryPos > window.innerHeight / 4 && !this.caption.el.classList.contains('is-hidden')) {
         this.caption.el.classList.add('is-hidden');
         this.scrollDelta = 0;
         this.margin.update(this.scrollDelta);
-      } else if (this.lastEntryPos > window.innerHeight * (2 / 3) && this.caption.el.classList.contains('is-hidden')) {
-        this.caption.el.classList.remove('is-hidden');
+      } else if (this.lastEntryPos < window.innerHeight && !this.caption.el.classList.contains('is-hidden')) {
+        this.caption.el.classList.add('is-hidden');
+      }
+    }
+  }, {
+    key: "toggleFooter",
+    value: function toggleFooter() {
+      if (this.lastEntryPos < window.innerHeight && this.footer.classList.contains('is-hidden')) {
+        this.footer.classList.remove('is-hidden');
+      } else if (this.lastEntryPos > window.innerHeight && !this.footer.classList.contains('is-hidden')) {
         this.footer.classList.add('is-hidden');
       }
     }
