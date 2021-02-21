@@ -1,16 +1,14 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 "use strict";
 
-var _layout = require("./modules/layout");
+var _slideshow = require("./modules/slideshow");
 
-var layout = new _layout.Layout();
-layout.init();
+window.addEventListener('load', function () {
+  var slideshow = new _slideshow.Slideshow(document.querySelector('.Slideshow'));
+  slideshow.init();
+});
 
-window.onbeforeunload = function () {
-  window.scrollTo(0, 0);
-};
-
-},{"./modules/layout":4}],2:[function(require,module,exports){
+},{"./modules/slideshow":4}],2:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25,21 +23,23 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Ascii = /*#__PURE__*/function () {
-  function Ascii(el) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  function Ascii(el, ref) {
+    var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
 
     _classCallCheck(this, Ascii);
 
     this.el = el;
-    this.ref = this.el.querySelector('.Ascii-ref');
-    this.container = this.el.querySelector('.Ascii-image');
+    this.ref = ref;
     this.options = Object.assign({
-      steps: ['·', '·', ':', '*'].reverse(),
-      contrast: 0,
+      steps: ["\xA0", '·', ':', '*'].reverse(),
+      contrast: 100,
       invert: false,
       width: null,
       height: null,
-      frameHeight: 1
+      fit: null,
+      frameHeight: 1,
+      paddingHeight: 0,
+      paddingWidth: 0
     }, options);
   }
 
@@ -47,9 +47,11 @@ var Ascii = /*#__PURE__*/function () {
     key: "init",
     value: function init() {
       if (this.options.invert && this.options.invert == 'true' || this.options.invert == true) this.options.steps = this.options.steps.reverse();
+      this.ref.crossOrigin = 'Anonymous';
       this.canvas = document.createElement('canvas');
-      this.ctx = this.canvas.getContext('2d');
-      this.build(); // this.ref.remove();
+      this.ctx = this.canvas.getContext('2d'); // document.body.append(this.canvas)
+
+      this.build();
     }
   }, {
     key: "build",
@@ -61,18 +63,61 @@ var Ascii = /*#__PURE__*/function () {
   }, {
     key: "buildImage",
     value: function buildImage() {
-      this.options.width = this.options.width ? this.options.width : Math.floor(this.ref.width / (this.ref.height / this.options.height));
-      this.options.height = this.options.height ? this.options.height : Math.floor(this.ref.height / (this.ref.width / this.options.width));
-      this.ratio = this.options.width / this.options.height;
-      this.canvas.width = this.options.width;
-      this.canvas.height = this.options.height;
-      this.ctx.drawImage(this.ref, 0, 0, this.ref.width, Math.floor(this.ref.width / this.ratio), 0, 0, this.options.width, this.options.height);
+      this.imageRatio = this.ref.naturalWidth / this.ref.naturalHeight;
+      this.containerRatio = (this.el.offsetWidth - this.options.paddingWidth * 2) / (this.el.offsetHeight - this.options.paddingHeight * 2);
+      this.options.width = this.options.width ? this.options.width : Math.floor(this.options.height * this.containerRatio);
+      this.options.height = this.options.height ? this.options.height : Math.ceil(this.options.width / this.containerRatio);
+      this.ctx.canvas.width = this.options.width;
+      this.ctx.canvas.height = this.options.height;
+
+      if (this.options.fit == 'contain') {
+        // wide image
+        if (this.containerRatio >= this.imageRatio) {
+          this.imageHeight = this.canvas.height - this.options.paddingHeight * 2;
+          this.imageWidth = this.imageHeight * this.imageRatio;
+          this.x = (this.canvas.width - this.imageWidth) / 2;
+          this.y = 0 + this.options.paddingHeight; // tall image
+        } else {
+          this.imageWidth = this.canvas.width - this.options.paddingWidth * 2;
+          this.imageHeight = this.imageWidth / this.imageRatio;
+          this.x = 0 + this.options.paddingWidth;
+          this.y = (this.canvas.height - this.imageHeight) / 2;
+        }
+      }
+
+      if (this.options.fit == 'cover') {
+        if (this.containerRatio >= this.imageRatio) {
+          this.imageWidth = this.canvas.width;
+          this.imageHeight = this.imageWidth / this.imageRatio;
+          this.x = 0;
+          this.y = (this.canvas.height - this.imageHeight) / 2;
+        } else {
+          this.imageHeight = this.canvas.height;
+          this.imageWidth = this.imageHeight * this.imageRatio;
+          this.x = (this.canvas.width - this.imageWidth) / 2;
+          this.y = 0;
+        }
+      }
+
+      if (this.options.bg) {
+        this.ctx.fillStyle = this.options.bg;
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      }
+
+      this.ctx.drawImage(this.ref, 0, 0, this.ref.naturalWidth, this.ref.naturalHeight, this.x, this.y, this.imageWidth, this.imageHeight);
       this.imgData = this.ctx.getImageData(0, 0, this.options.width, this.options.height).data;
-      if (this.options.contrast) this.contrastImage();
+
+      if (this.options.gamma) {
+        this.adjustGamma();
+      }
+
+      if (this.options.contrast) {
+        this.adjustContrast();
+      }
     }
   }, {
-    key: "contrastImage",
-    value: function contrastImage() {
+    key: "adjustContrast",
+    value: function adjustContrast() {
       var contrast = this.options.contrast / 100 + 1;
       var intercept = 128 * (1 - contrast);
 
@@ -80,6 +125,17 @@ var Ascii = /*#__PURE__*/function () {
         this.imgData[i] = this.imgData[i] * contrast + intercept;
         this.imgData[i + 1] = this.imgData[i + 1] * contrast + intercept;
         this.imgData[i + 2] = this.imgData[i + 2] * contrast + intercept;
+      }
+    }
+  }, {
+    key: "adjustGamma",
+    value: function adjustGamma() {
+      var gammaCorrection = 1 / this.options.gamma;
+
+      for (var i = 0; i < this.imgData.length; i += 4) {
+        this.imgData[i] = Math.pow(255 * (this.imgData[i] / 255), gammaCorrection);
+        this.imgData[i + 1] = Math.pow(255 * (this.imgData[i + 1] / 255), gammaCorrection);
+        this.imgData[i + 2] = Math.pow(255 * (this.imgData[i + 2] / 255), gammaCorrection);
       }
     }
   }, {
@@ -111,6 +167,10 @@ var Ascii = /*#__PURE__*/function () {
           containerHTML += '\n';
         }
 
+        if (i % this.options.width > 0 && i % this.options.width < this.options.width) {
+          containerHTML += " ";
+        }
+
         if (this.pixelData[i] == 1) {
           containerHTML += this.options.steps[this.options.steps.length - 1];
         } else {
@@ -118,14 +178,15 @@ var Ascii = /*#__PURE__*/function () {
         }
       }
 
-      this.container.innerText = "".concat(containerHTML);
+      this.el.innerHTML = "".concat(containerHTML);
     }
   }, {
-    key: "updateWidth",
-    value: function updateWidth(width, frameHeight) {
-      this.options.width = width;
-      this.options.frameHeight = frameHeight;
-      this.options.height = null;
+    key: "update",
+    value: function update(options) {
+      this.options.width = options.width ? options.width : this.options.width;
+      this.options.height = options.height ? options.height : this.options.height;
+      this.options.paddingWidth = options.paddingWidth ? options.paddingWidth : this.options.paddingWidth;
+      this.options.paddingHeight = options.paddingHeight ? options.paddingHeight : this.options.paddingHeight;
       this.build();
     }
   }]);
@@ -141,401 +202,376 @@ exports.Ascii = Ascii;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.Caption = void 0;
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var Caption = /*#__PURE__*/function () {
-  function Caption(el) {
-    _classCallCheck(this, Caption);
-
-    this.el = el;
-    this.rect = this.el.getBoundingClientRect();
-    this.entries = _toConsumableArray(document.querySelectorAll('.Entry'));
-    this.activeEntryEl = null;
-  }
-
-  _createClass(Caption, [{
-    key: "init",
-    value: function init() {
-      var _this = this;
-
-      window.addEventListener('scroll', function () {
-        _this.updateContent();
-      });
-      window.addEventListener('resize', function () {
-        _this.updateRect();
-
-        _this.updateContent();
-      });
-    }
-  }, {
-    key: "updateContent",
-    value: function updateContent() {
-      var _this2 = this;
-
-      if (!this.el.classList.contains('is-hidden')) {
-        this.entries.forEach(function (entry) {
-          var entryRect = entry.getBoundingClientRect();
-
-          if (entryRect.top < _this2.rect.top && entryRect.bottom > _this2.rect.bottom && _this2.activeEntry !== entry) {
-            _this2.activeEntry = entry;
-          }
-        });
-      }
-    }
-  }, {
-    key: "updateRect",
-    value: function updateRect() {
-      this.rect = this.el.getBoundingClientRect();
-    }
-  }, {
-    key: "activeEntry",
-    set: function set(entry) {
-      this.activeEntryEl = entry;
-      this.el.innerHTML = entry.querySelector('.Entry-caption') ? entry.querySelector('.Entry-caption').innerHTML : '';
-    },
-    get: function get() {
-      return this.activeEntryEl;
-    }
-  }]);
-
-  return Caption;
-}();
-
-exports.Caption = Caption;
-
-},{}],4:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Layout = void 0;
-
-var _margin = require("./margin");
-
-var _lazyLoader = require("./lazy-loader");
-
-var _caption = require("./caption");
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var Layout = /*#__PURE__*/function () {
-  function Layout() {
-    _classCallCheck(this, Layout);
-
-    this.headerInfo = document.querySelector('.Header-info');
-    this.footer = document.querySelector('.Footer');
-    this.entries = document.querySelectorAll('.Entry');
-    this.firstEntry = this.entries[0];
-    this.lastEntry = this.entries[this.entries.length - 1];
-    this.margin = new _margin.Margin(document.querySelector('.Margin'), {
-      contrast: 100
-    });
-    this.caption = new _caption.Caption(document.querySelector('.Caption'));
-    this.lazyLoader = new _lazyLoader.LazyLoader();
-    this.scrollDelta = 0;
-  }
-
-  _createClass(Layout, [{
-    key: "init",
-    value: function init() {
-      var _this = this;
-
-      window.addEventListener('load', function () {
-        _this.margin.init();
-
-        _this.lazyLoader.init();
-
-        _this.caption.init();
-
-        _this.updateWidth();
-
-        window.addEventListener('resize', function (e) {
-          _this.update(e);
-        });
-        window.addEventListener('scroll', function (e) {
-          _this.update(e);
-        });
-      });
-    }
-  }, {
-    key: "update",
-    value: function update(e) {
-      if (e.type == 'resize') {
-        this.updateWidth();
-      } else if (e.type == 'scroll') {
-        this.firstEntryPos = this.firstEntry.getBoundingClientRect().top;
-        this.lastEntryPos = this.lastEntry.getBoundingClientRect().bottom;
-        this.toggleHeader();
-        this.toggleCaption();
-        this.toggleFooter();
-      }
-    }
-  }, {
-    key: "updateWidth",
-    value: function updateWidth() {
-      var width = Math.floor(this.margin.el.clientWidth / this.margin.unitWidth);
-      this.headerInfo.style.width = "".concat(width * this.margin.unitWidth, "px");
-      this.caption.el.style.width = "".concat(width * this.margin.unitWidth, "px");
-      this.margin.update(this.scrollDelta);
-    }
-  }, {
-    key: "toggleHeader",
-    value: function toggleHeader() {
-      if (this.firstEntryPos < 0 && !this.headerInfo.classList.contains('is-hidden')) {
-        this.headerInfo.classList.add('is-hidden');
-        this.margin.update(this.scrollDelta);
-      } else if (this.firstEntryPos > 0 && this.headerInfo.classList.contains('is-hidden')) {
-        this.headerInfo.classList.remove('is-hidden');
-        this.margin.update(this.scrollDelta);
-      }
-    }
-  }, {
-    key: "toggleCaption",
-    value: function toggleCaption() {
-      if (this.firstEntryPos < window.innerHeight / 4 && this.lastEntryPos > window.innerHeight && this.caption.el.classList.contains('is-hidden')) {
-        this.caption.el.classList.remove('is-hidden');
-        this.scrollDelta = -1;
-        this.margin.update(this.scrollDelta);
-      } else if (this.firstEntryPos > window.innerHeight / 4 && !this.caption.el.classList.contains('is-hidden')) {
-        this.caption.el.classList.add('is-hidden');
-        this.scrollDelta = 0;
-        this.margin.update(this.scrollDelta);
-      } else if (this.lastEntryPos < window.innerHeight && !this.caption.el.classList.contains('is-hidden')) {
-        this.caption.el.classList.add('is-hidden');
-      }
-    }
-  }, {
-    key: "toggleFooter",
-    value: function toggleFooter() {
-      if (this.lastEntryPos < window.innerHeight && this.footer.classList.contains('is-hidden')) {
-        this.footer.classList.remove('is-hidden');
-      } else if (this.lastEntryPos > window.innerHeight && !this.footer.classList.contains('is-hidden')) {
-        this.footer.classList.add('is-hidden');
-      }
-    }
-  }]);
-
-  return Layout;
-}();
-
-exports.Layout = Layout;
-
-},{"./caption":3,"./lazy-loader":5,"./margin":6}],5:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.LazyLoader = void 0;
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var LazyLoader = /*#__PURE__*/function () {
-  function LazyLoader() {
-    _classCallCheck(this, LazyLoader);
-
-    this.images = _toConsumableArray(document.querySelectorAll('.Entry-media--image'));
-    this.options = {
-      rootMargin: '200%',
-      threshold: 0
-    };
-    this.preloadImageCount = 0;
-  }
-
-  _createClass(LazyLoader, [{
-    key: "init",
-    value: function init() {
-      this.loadThumbnails();
-    }
-  }, {
-    key: "loadThumbnails",
-    value: function loadThumbnails() {
-      var _this = this;
-
-      this.images.forEach(function (image) {
-        var url = new URL(image.dataset.src);
-        image.src = "".concat(url.origin).concat(url.pathname, "?w=50&auto=format");
-        image.addEventListener('load', function () {
-          _this.preloadImageCount++;
-
-          if (_this.preloadImageCount == _this.images.length) {
-            _this.createObserver();
-          }
-        });
-      });
-    }
-  }, {
-    key: "createObserver",
-    value: function createObserver() {
-      var _this2 = this;
-
-      this.observer = new IntersectionObserver(this.handleObservation.bind(this), this.options);
-      this.images.forEach(function (image) {
-        _this2.observer.observe(image);
-      });
-    }
-  }, {
-    key: "handleObservation",
-    value: function handleObservation(entries, observer) {
-      var _this3 = this;
-
-      entries.forEach(function (entry) {
-        if (entry.isIntersecting) {
-          observer.unobserve(entry.target);
-
-          _this3.loadImage(entry.target);
-        }
-      });
-    }
-  }, {
-    key: "loadImage",
-    value: function loadImage(image) {
-      var url = new URL(image.dataset.src);
-      image.sizes = '100vw';
-      image.srcset = "".concat(url.origin).concat(url.pathname, "?w=750&auto=format&q=90 750w, ").concat(url.origin).concat(url.pathname, "?w=1500&auto=formatq=90 1500w, ").concat(url.origin).concat(url.pathname, "?w=3000&auto=formatq=90 3000w");
-      image.src = "".concat(url.origin).concat(url.pathname, "?auto=format");
-      image.addEventListener('load', function () {
-        image.classList.add('is-loaded');
-      });
-    }
-  }]);
-
-  return LazyLoader;
-}();
-
-exports.LazyLoader = LazyLoader;
-
-},{}],6:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.Margin = void 0;
+exports.Slide = void 0;
 
 var _ascii = require("./ascii");
 
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-var Margin = /*#__PURE__*/function () {
-  function Margin(el) {
-    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-    _classCallCheck(this, Margin);
+var Slide = /*#__PURE__*/function () {
+  function Slide(el, i) {
+    _classCallCheck(this, Slide);
 
     this.el = el;
-    this.asciiEl = this.el.querySelector('.Ascii');
-    this.asciiRrefEl = this.el.querySelector('.Ascii-ref');
+    this.i = i;
     this.ruler = document.querySelector('.Ruler');
-    this.options = Object.assign({
-      steps: ['·', ' ', ' ', '·'].reverse(),
-      contrast: 0,
-      invert: false
-    }, options);
-    this.unitWidth = null;
-    this.unitHeight = null;
+    this.media = this.el.querySelector('.Slide-media');
+    this.caption = this.media ? this.media.alt : null;
     this.ascii = null;
+    this.thumbnail = null;
+    this.options = {
+      steps: [" ", '●'].reverse(),
+      contrast: Number(this.el.dataset.contrast) || 0,
+      gamma: Number(this.el.dataset.gamma) || 0,
+      bg: Number(this.el.dataset.bg) || 'black',
+      invert: this.el.dataset.invert || false
+    };
   }
 
-  _createClass(Margin, [{
-    key: "init",
-    value: function init() {
-      this.getUnitDimensions();
-      this.buildAscii();
+  _createClass(Slide, [{
+    key: "createThumbnail",
+    value: function createThumbnail() {
+      var url = new URL(this.media.dataset.src);
+      this.thumbnail = document.createElement('img');
+      this.thumbnail.src = "".concat(url.origin).concat(url.pathname, "?w=200&auto=format");
+      this.loadThumbnail();
+    }
+  }, {
+    key: "createAscii",
+    value: function createAscii() {
+      this.ascii = new _ascii.Ascii(this.el.querySelector('.Ascii'), this.thumbnail, _objectSpread(_objectSpread(_objectSpread(_objectSpread({}, this.options), this.dimensions), this.padding), {}, {
+        fit: this.el.dataset.fit,
+        bg: this.el.style.backgroundColor
+      }));
+      this.ascii.init();
     }
   }, {
     key: "update",
     value: function update() {
-      var delta = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      this.updateAscii(delta);
-    }
-  }, {
-    key: "buildAscii",
-    value: function buildAscii() {
-      console.log(this.el.clientHeight, this.unitHeight, this.height);
-      var options = {
-        steps: this.options.steps,
-        contrast: this.options.contrast,
-        invert: this.options.invert,
-        width: this.width,
-        height: this.height
-      };
-      this.ascii = new _ascii.Ascii(this.el.querySelector('.Ascii'), options);
-      this.ascii.init();
+      this.updateAscii();
     }
   }, {
     key: "updateAscii",
     value: function updateAscii() {
-      var delta = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-      this.ascii.options.width = this.width;
-      this.ascii.options.height = this.height + delta > 0 ? this.height + delta : 1;
-      this.ascii.build();
+      this.ascii.update(_objectSpread(_objectSpread({}, this.dimensions), this.padding));
     }
   }, {
-    key: "getUnitDimensions",
-    value: function getUnitDimensions() {
-      var rect = this.ruler.getBoundingClientRect();
-      this.unitWidth = rect.width;
-      this.unitHeight = rect.height;
+    key: "activate",
+    value: function activate() {
+      var _this = this;
+
+      this.el.classList.add('is-active');
+
+      if (this.ascii) {
+        this.updateAscii();
+      } else {
+        this.createAscii();
+        this.thumbnail.addEventListener('load', function () {
+          _this.updateAscii();
+        });
+        this.media.addEventListener('load', function () {
+          _this.updateAscii();
+        });
+        this.loadImage();
+      }
     }
   }, {
-    key: "width",
+    key: "deactivate",
+    value: function deactivate() {
+      this.el.classList.remove('is-active');
+    }
+  }, {
+    key: "loadThumbnail",
+    value: function loadThumbnail() {
+      this.media.src = this.thumbnail.src;
+    }
+  }, {
+    key: "loadImage",
+    value: function loadImage() {
+      var _this2 = this;
+
+      var url = new URL(this.media.dataset.src);
+      this.media.sizes = '100vw';
+      this.media.srcset = "".concat(url.origin).concat(url.pathname, "?w=750&auto=format&q=90 750w, ").concat(url.origin).concat(url.pathname, "?w=1500&auto=formatq=90 1500w, ").concat(url.origin).concat(url.pathname, "?w=3000&auto=formatq=90 3000w");
+      this.media.src = "".concat(url.origin).concat(url.pathname, "?auto=format");
+      this.media.addEventListener('load', function () {
+        _this2.media.classList.add('is-loaded');
+      });
+    }
+  }, {
+    key: "dimensions",
     get: function get() {
-      return Math.floor(this.asciiEl.clientWidth / this.unitWidth);
+      var rulerRect = this.ruler.getBoundingClientRect();
+      return {
+        width: this.ascii ? Math.round(this.ascii.el.offsetWidth / rulerRect.width) : Math.round(this.el.querySelector('.Ascii').offsetWidth / rulerRect.width),
+        height: this.ascii ? Math.round(this.ascii.el.offsetHeight / rulerRect.height) : Math.round(this.el.querySelector('.Ascii').offsetHeight / rulerRect.height)
+      };
     }
   }, {
-    key: "height",
+    key: "padding",
     get: function get() {
-      return Math.floor(this.el.clientHeight / this.unitHeight);
+      return {
+        paddingHeight: this.mediaPadding.paddingHeight - this.asciiPadding.paddingHeight,
+        paddingWidth: this.mediaPadding.paddingWidth - this.asciiPadding.paddingWidth
+      };
+    }
+  }, {
+    key: "mediaPadding",
+    get: function get() {
+      return {
+        paddingHeight: Math.round(this.media.offsetTop / this.ruler.offsetHeight),
+        paddingWidth: Math.round(this.media.offsetLeft / this.ruler.offsetWidth)
+      };
+    }
+  }, {
+    key: "asciiPadding",
+    get: function get() {
+      return {
+        paddingHeight: this.ascii ? Math.round(this.ascii.el.offsetTop / this.ruler.offsetHeight) : Math.round(this.el.querySelector('.Ascii').offsetTop / this.ruler.offsetHeight),
+        paddingWidth: this.ascii ? Math.round(this.ascii.el.offsetLeft / this.ruler.offsetWidth) : Math.round(this.el.querySelector('.Ascii').offsetLeft / this.ruler.offsetWidth)
+      };
     }
   }]);
 
-  return Margin;
+  return Slide;
 }();
 
-exports.Margin = Margin;
+exports.Slide = Slide;
 
-},{"./ascii":2}]},{},[1]);
+},{"./ascii":2}],4:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.Slideshow = void 0;
+
+var _slide = require("./slide");
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Slideshow = /*#__PURE__*/function () {
+  function Slideshow(el) {
+    _classCallCheck(this, Slideshow);
+
+    this.el = el;
+    this.header = document.querySelector('.Header');
+    this.toggle = this.header.querySelector('.Header-toggle');
+    this.nav = this.header.querySelector('.Header-nav');
+    this.navList = this.header.querySelector('.Header-nav');
+    this.caption = this.header.querySelector('.Header-caption');
+    this.prevButton = document.querySelector('.Slideshow-progressButton--prev');
+    this.nextButton = document.querySelector('.Slideshow-progressButton--next');
+    this.navItems = null;
+    this.progress = 0;
+    this.slides = null;
+  }
+
+  _createClass(Slideshow, [{
+    key: "init",
+    value: function init() {
+      this.createSlides();
+      this.slides.forEach(function (slide) {
+        slide.createThumbnail();
+      });
+      this.populateNav();
+      this.activeIndex = Math.floor(Math.random() * this.slides.length);
+      this.addEventListeners();
+    }
+  }, {
+    key: "populateNav",
+    value: function populateNav() {
+      var _this = this;
+
+      this.navItems = this.slides.map(function (slide) {
+        var navItem = document.createElement('li');
+        navItem.classList.add('Header-navItem');
+
+        _this.navList.append(navItem);
+
+        return navItem;
+      });
+    }
+  }, {
+    key: "addEventListeners",
+    value: function addEventListeners() {
+      var _this2 = this;
+
+      this.prevButton.addEventListener('click', function () {
+        if (_this2.el.classList.contains('is-meta') || _this2.el.classList.contains('is-about')) {
+          _this2.hideMeta();
+        } else {
+          _this2.activeIndex--;
+        }
+      });
+      this.nextButton.addEventListener('click', function () {
+        if (_this2.el.classList.contains('is-meta') || _this2.el.classList.contains('is-about')) {
+          _this2.hideMeta();
+        } else {
+          _this2.activeIndex++;
+        }
+      });
+      this.toggle.addEventListener('click', function () {
+        _this2.toggleAbout();
+
+        _this2.hideMeta();
+      });
+      this.navItems.forEach(function (navItem, i) {
+        navItem.addEventListener('click', function () {
+          _this2.toggleMeta();
+
+          _this2.activeIndex = i;
+        });
+      });
+      this.navItems.forEach(function (navItem, i) {
+        navItem.addEventListener('mouseenter', function () {
+          if (_this2.el.classList.contains('is-meta') || _this2.el.classList.contains('is-about')) {
+            _this2.hintSlide(i);
+          }
+        });
+      });
+      this.nav.addEventListener('mouseleave', function () {
+        if (_this2.el.classList.contains('is-about')) {
+          _this2.hideMeta();
+        } else {
+          _this2.activeIndex = _this2.activeIndex;
+        }
+      });
+      window.addEventListener('resize', function () {
+        _this2.activeSlide.update();
+      });
+    }
+  }, {
+    key: "createSlides",
+    value: function createSlides() {
+      this.slides = _toConsumableArray(this.el.querySelectorAll('.Slide')).map(function (slide, i) {
+        return new _slide.Slide(slide, i);
+      });
+    }
+  }, {
+    key: "hintSlide",
+    value: function hintSlide(i) {
+      this.el.classList.add('is-meta');
+      this.slides.forEach(function (slide) {
+        slide.deactivate();
+      });
+      this.navItems.forEach(function (navItem) {
+        navItem.classList.remove('is-active');
+      });
+      this.slides[i].activate();
+      this.navItems[i].classList.add('is-active');
+      this.updateCaption(i);
+    }
+  }, {
+    key: "updateCaption",
+    value: function updateCaption(i) {
+      if (this.slides[i].isAbout) {
+        this.header.classList.add('is-about');
+        this.showMeta();
+        this.caption.innerHTML = this.slides[i].el.innerHTML;
+      } else {
+        this.header.classList.remove('is-about');
+        this.caption.innerHTML = this.slides[i].caption;
+      }
+    }
+  }, {
+    key: "toggleAbout",
+    value: function toggleAbout() {
+      if (this.el.classList.contains('is-about')) {
+        this.hideAbout();
+      } else {
+        this.showAbout();
+      }
+    }
+  }, {
+    key: "toggleMeta",
+    value: function toggleMeta() {
+      if (this.el.classList.contains('is-meta')) {
+        this.hideMeta();
+      } else {
+        this.showMeta();
+      }
+    }
+  }, {
+    key: "showMeta",
+    value: function showMeta() {
+      this.el.classList.add('is-meta');
+    }
+  }, {
+    key: "hideMeta",
+    value: function hideMeta() {
+      this.el.classList.remove('is-meta');
+    }
+  }, {
+    key: "showAbout",
+    value: function showAbout() {
+      this.el.classList.add('is-about');
+    }
+  }, {
+    key: "hideAbout",
+    value: function hideAbout() {
+      this.el.classList.remove('is-about');
+    }
+  }, {
+    key: "activeSlide",
+    get: function get() {
+      return this.slides[this.activeIndex];
+    }
+  }, {
+    key: "activeIndex",
+    get: function get() {
+      return Math.abs(this.progress % this.slides.length);
+    },
+    set: function set(val) {
+      this.slides.forEach(function (slide) {
+        slide.deactivate();
+      });
+      this.navItems.forEach(function (navItem) {
+        navItem.classList.remove('is-active');
+      });
+      this.header.style.color = null;
+      this.progress = val;
+      this.activeSlide.activate();
+      this.activeNavItem.classList.add('is-active');
+      this.header.style.color = this.activeSlide.el.dataset.textColor;
+      this.updateCaption(this.activeIndex);
+    }
+  }, {
+    key: "activeNavItem",
+    get: function get() {
+      return this.navItems[this.activeIndex];
+    }
+  }]);
+
+  return Slideshow;
+}();
+
+exports.Slideshow = Slideshow;
+
+},{"./slide":3}]},{},[1]);

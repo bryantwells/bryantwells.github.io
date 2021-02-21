@@ -1,8 +1,6 @@
-import { Layout } from './modules/layout';
+import { Slideshow } from "./modules/slideshow";
 
-const layout = new Layout();
-layout.init();
-
-window.onbeforeunload = function () {
-    window.scrollTo(0, 0);
-}
+window.addEventListener('load', () => {
+    const slideshow = new Slideshow(document.querySelector('.Slideshow'))
+    slideshow.init();
+});
