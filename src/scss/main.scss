@@ -25,6 +25,8 @@ a {
     color: unset;
     text-decoration: none;
     pointer-events: all;
+
+    &:hover { -webkit-text-stroke: 1.5px; }
 }
     a::before { content: '('; }
     a::after { content: ')'; }
@@ -123,6 +125,7 @@ canvas {
     flex-wrap: wrap;
     pointer-events: none;
     letter-spacing: 0.075em;
+    user-select: none;
 }
     .Slideshow.is-meta .Header,
     .Slideshow.is-about .Header { background-color: white; color: unset !important; }
@@ -130,7 +133,6 @@ canvas {
 .Header-nav {
     flex: 1;
     counter-reset: counter;
-    margin-right: 1em;
 }
 
 .Header-navItem {
@@ -140,12 +142,14 @@ canvas {
     padding-right: 0.25em;
     color: transparent;
     user-select: none;
+
+    &:hover { -webkit-text-stroke: 1.5px; }
 }
     .Slideshow.is-meta .Header-navItem,
     .Slideshow.is-about .Header-navItem { color: unset; pointer-events: all; }
-    .Slideshow.is-about .Header-navItem { display: none; }
     .Header-navItem::before { content: counter(counter, decimal-leading-zero); }
     .Header-navItem.is-active { color: unset; pointer-events: all; }
+    .Slideshow.is-meta .Header-navItem.is-active { -webkit-text-stroke: 1.5px; }
 
 .Header-toggle {
     display: inline-block;
@@ -153,7 +157,12 @@ canvas {
     counter-increment: counter;
     padding-right: 0.25em;
     pointer-events: all;
+    margin-right: 0.5em;
+
+    &:hover { -webkit-text-stroke: 1.5px; }
 }
+    .Header-toggle::before { content: '✲'; }
+    .Slideshow.is-about .Header-toggle::before { -webkit-text-stroke: 1.5px; }
 
 .Header-caption {
     flex: 0 0 100%;

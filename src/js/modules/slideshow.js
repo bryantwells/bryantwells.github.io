@@ -8,7 +8,7 @@ export class Slideshow {
         this.header = document.querySelector('.Header');
         this.toggle = this.header.querySelector('.Header-toggle');
         this.nav = this.header.querySelector('.Header-nav');
-        this.navList = this.header.querySelector('.Header-nav');
+        this.navList = this.header.querySelector('.Header-navList');
         this.caption = this.header.querySelector('.Header-caption');
 
         this.prevButton = document.querySelector('.Slideshow-progressButton--prev');
@@ -62,6 +62,7 @@ export class Slideshow {
         this.navItems.forEach((navItem, i) => {
             navItem.addEventListener('click', () => {
                 this.toggleMeta();
+                this.hideAbout();
                 this.activeIndex = i;
             });
         });
@@ -74,11 +75,15 @@ export class Slideshow {
             });
         });
 
-        this.nav.addEventListener('mouseleave', () => {
+        this.navList.addEventListener('mouseleave', () => {
+            console.log('leave');
             if (this.el.classList.contains('is-about')) {
                 this.hideMeta();
+                this.activeIndex = this.activeIndex;
+                console.log('hide meta');
             } else {
                 this.activeIndex = this.activeIndex;
+                console.log(this.activeIndex);
             }
             
         });
@@ -151,7 +156,11 @@ export class Slideshow {
     }
 
     get activeIndex() {
-        return Math.abs(this.progress % this.slides.length);
+        if (this.progress >= 0) {
+            return Math.abs(this.progress % this.slides.length);
+        } else {
+            return this.slides.length + this.progress;
+        }
     }
 
     get activeNavItem() {
