@@ -47,7 +47,6 @@ var Ascii = /*#__PURE__*/function () {
     key: "init",
     value: function init() {
       if (this.options.invert && this.options.invert == 'true' || this.options.invert == true) this.options.steps = this.options.steps.reverse();
-      this.ref.crossOrigin = 'Anonymous';
       this.canvas = document.createElement('canvas');
       this.ctx = this.canvas.getContext('2d'); // document.body.append(this.canvas)
 
@@ -243,6 +242,7 @@ var Slide = /*#__PURE__*/function () {
     value: function createThumbnail() {
       var url = new URL(this.media.dataset.src);
       this.thumbnail = document.createElement('img');
+      this.thumbnail.crossOrigin = 'Anonymous';
       this.thumbnail.src = "".concat(url.origin).concat(url.pathname, "?w=200&auto=format");
       this.loadThumbnail();
     }

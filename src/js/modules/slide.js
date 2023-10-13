@@ -24,6 +24,7 @@ export class Slide {
     createThumbnail() {
         const url = new URL(this.media.dataset.src);
         this.thumbnail = document.createElement('img');
+        this.thumbnail.crossOrigin = 'Anonymous';
         this.thumbnail.src = `${url.origin}${url.pathname}?w=200&auto=format`;
         this.loadThumbnail();
     }
