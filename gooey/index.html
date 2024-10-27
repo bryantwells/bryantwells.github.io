@@ -60,28 +60,36 @@
 
 	<div class="textbox">
 		<p>Instruments</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>of the</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>Black Gooey</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>Universe</p>
+		<div class="container"></div>
 	</div>
 
 	<div class="textbox">
 		<p>The Kitchen’s</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>2022–2023</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>L.A.B. Research</p>
+		<div class="container"></div>
 	</div>
 	<div class="textbox">
 		<p>Residency</p>
+		<div class="container"></div>
 	</div>
 
 
@@ -902,64 +910,69 @@
 		const minRadius = 60;
 		const maxRadius = 220;
 		const step = 3;
+	
 
-		let radius = Math.round(Math.random() * (maxRadius - minRadius)) + minRadius;
-
-		textboxes.forEach((textbox) => {
-			const text = textbox.querySelector('p').textContent;
-			text.split('').forEach((char) => {
-				const map = {
-					' ': 'space',
-					',': 'comma',
-					'’': 'grave',
-					'.': 'period',
-					'-': 'hyphen',
-					'“': 'quotedblleft',
-					'”': 'quotedblright',
-					'?': 'question',
-					'1': 'one',
-					'2': 'two',
-					'3': 'three',
-					'4': 'four',
-					'5': 'five',
-					'6': 'six',
-					'7': 'seven',
-					'8': 'eight',
-					'9': 'nine',
-					'0': 'zero',
-					'–': 'endash',
-					'—': 'emdash',
-					'(': 'parenleft',
-					')': 'parenright',
-					'/': 'slash',
-					'[': 'brackeleft',
-					']': 'bracketright',
-					':': 'colon',
-				}
-				const name = (map[char]) ? map[char] : char;
-				const svg = font.querySelector(`[data-name="${name}"]`).cloneNode(true);
-				const paths = svg.querySelectorAll('path');
-				paths.forEach((path) => {
-					const length = path.getTotalLength();
-					for (let i = 0; i < length; i += 10) {
-						const point = path.getPointAtLength(i);
-						const circle = document.createElementNS(
-							'http://www.w3.org/2000/svg',
-							'circle');
-						radius = Math.round(Math.random())
-							? radius + step
-							: radius - step;
-						radius = Math.min(radius, maxRadius);
-						radius = Math.max(radius, minRadius);
-						circle.setAttributeNS(null, 'cx', point.x);
-						circle.setAttributeNS(null, 'cy', point.y);
-						circle.setAttributeNS(null, 'r', radius);
-						svg.appendChild(circle);
+		setInterval(() => {
+			let radius = Math.round(Math.random() * (maxRadius - minRadius)) + minRadius;
+			textboxes.forEach((textbox) => {
+				const container = textbox.querySelector('.container');
+				const text = textbox.querySelector('p').textContent;
+				container.innerHTML = '';
+				text.split('').forEach((char) => {
+					const map = {
+						' ': 'space',
+						',': 'comma',
+						'’': 'grave',
+						'.': 'period',
+						'-': 'hyphen',
+						'“': 'quotedblleft',
+						'”': 'quotedblright',
+						'?': 'question',
+						'1': 'one',
+						'2': 'two',
+						'3': 'three',
+						'4': 'four',
+						'5': 'five',
+						'6': 'six',
+						'7': 'seven',
+						'8': 'eight',
+						'9': 'nine',
+						'0': 'zero',
+						'–': 'endash',
+						'—': 'emdash',
+						'(': 'parenleft',
+						')': 'parenright',
+						'/': 'slash',
+						'[': 'brackeleft',
+						']': 'bracketright',
+						':': 'colon',
 					}
+					const name = (map[char]) ? map[char] : char;
+					const svg = font.querySelector(`[data-name="${name}"]`).cloneNode(true);
+					const paths = svg.querySelectorAll('path');
+					paths.forEach((path) => {
+						const length = path.getTotalLength();
+						for (let i = 0; i < length; i += 10) {
+							const point = path.getPointAtLength(i);
+							const circle = document.createElementNS(
+								'http://www.w3.org/2000/svg',
+								'circle');
+							radius = Math.round(Math.random())
+								? radius + step
+								: radius - step;
+							radius = Math.min(radius, maxRadius);
+							radius = Math.max(radius, minRadius);
+							circle.setAttributeNS(null, 'cx', point.x);
+							circle.setAttributeNS(null, 'cy', point.y);
+							circle.setAttributeNS(null, 'r', radius);
+							svg.appendChild(circle);
+						}
+					});
+					container.appendChild(svg);
 				});
-				textbox.appendChild(svg);
 			});
-		});
+		},1000)
+		
 	</script>
 </body>
 
